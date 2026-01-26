@@ -1,0 +1,34 @@
+# Time Series ML Demonstration - Dependencies
+# ============================================
+
+# Core Data Science
+numpy>=1.24.0
+pandas>=2.0.0
+scikit-learn>=1.3.0
+
+# Deep Learning (PyTorch)
+torch>=2.0.0
+
+# Visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# NLP/Text Processing
+nltk>=3.8.0
+
+# Time Series Forecasting
+prophet>=1.1.0
+
+# MLOps/Serving
+fastapi>=0.100.0
+uvicorn>=0.23.0
+pydantic>=2.0.0
+joblib>=1.3.0
+
+# Configuration & Utilities
+pyyaml>=6.0
+tqdm>=4.65.0
+
+# Development (optional)
+pytest>=7.0.0
+black>=23.0.0

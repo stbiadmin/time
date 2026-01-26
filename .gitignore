@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+venv/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+
+# Tool config
+.claude/
+
+# Generated outputs (reproducible via pipeline scripts)
+outputs/logs/*
+!outputs/logs/.gitkeep
+outputs/models/*
+!outputs/models/.gitkeep
+outputs/figures/*
+!outputs/figures/.gitkeep
+
+# Generated data (reproducible via 01_generate_data.py)
+data/raw/*.csv
+data/processed/*
+!data/processed/.gitkeep
+
+# Script outputs
+scripts/outputs/
+
+# Presenter scripts and development docs
+docs/
+IMPLEMENTATION_PLAN.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/

@@ -1,0 +1,282 @@
+# ============================================================
+# Time Series ML Demonstration - Configuration
+# ============================================================
+
+
+# Random seed for reproducibility across all experiments
+random_seed: 42
+
+# ============ DATA GENERATION SETTINGS ============
+
+data_generation:
+  rma:
+    # Number of days of historical data to generate
+    n_days: 730  # 2 years
+
+    # Geographic regions for RMA operations
+    regions:
+      - NA      # North America
+      - EMEA    # Europe, Middle East, Africa
+      - APAC    # Asia Pacific
+      - LATAM   # Latin America
+      - ANZ     # Australia/New Zealand
+
+    # SKU categories for spare parts
+    sku_categories:
+      - CPU
+      - GPU
+      - RAM
+      - SSD
+      - HDD
+      - PSU
+      - MOBO
+      - NIC
+      - FAN
+      - CABLE
+      - DISPLAY
+      - KEYBOARD
+      - CHASSIS
+      - COOLING
+      - BATTERY
+
+    # Urgency levels (1=standard, 2=expedited, 3=critical)
+    urgency_levels: [1, 2, 3]
+    urgency_weights: [0.6, 0.3, 0.1]  # Distribution
+
+    # Shipping methods
+    shipping_methods:
+      - ground
+      - express
+      - air
+
+    # Base weights by SKU category (kg)
+    sku_base_weights:
+      CPU: 0.5
+      GPU: 1.2
+      RAM: 0.1
+      SSD: 0.2
+      HDD: 0.8
+      PSU: 2.5
+      MOBO: 1.5
+      NIC: 0.3
+      FAN: 0.4
+      CABLE: 0.2
+      DISPLAY: 5.0
+      KEYBOARD: 0.8
+      CHASSIS: 8.0
+      COOLING: 1.5
+      BATTERY: 0.6
+
+    # Seasonal patterns
+    weekly_pattern: [1.0, 1.1, 1.15, 1.1, 1.0, 0.7, 0.5]  # Mon-Sun multipliers
+    monthly_eom_spike: 1.3  # End-of-month/quarter spike
+
+  network_events:
+    # Number of events to generate
+    n_events: 30000
+
+    # Time window for events (days)
+    time_window_days: 30
+
+    # Event cluster types and their proportions
+    cluster_types:
+      normal_web: 0.35
+      normal_db: 0.20
+      suspicious_scan: 0.10
+      auth_failure: 0.12
+      data_exfil: 0.08
+      maintenance: 0.15
+
+    # Port ranges by cluster type
+    common_ports:
+      web: [80, 443, 8080, 8443]
+      database: [3306, 5432, 27017, 6379]
+      ssh: [22]
+      suspicious: [23, 445, 3389, 4444, 5555]
+
+# ============ PREPROCESSING SETTINGS ============
+
+preprocessing:
+  rma:
+    # Sliding window configuration
+    sequence_length: 30    # 30 days of history
+    prediction_horizon: 7  # Predict 7 days ahead
+    stride: 1              # Daily sliding
+
+    # Train/validation/test split ratios (temporal split)
+    train_ratio: 0.70
+    val_ratio: 0.15
+    test_ratio: 0.15
+
+    # Feature scaling
+    numerical_scaler: "standard"  # standard, minmax, robust
+
+  network:
+    # TF-IDF settings for log messages
+    tfidf:
+      max_df: 0.95
+      min_df: 2
+      ngram_range: [1, 2]
+      max_features: 1000
+
+    # LSA settings
+    lsa:
+      n_components: 20
+
+    # Numerical feature normalization
+    numerical_scaler: "standard"
+
+# ============ MODEL ARCHITECTURE SETTINGS ============
+
+models:
+  gru:
+    # Version 1: Simple numerical features only
+    v1:
+      hidden_size: 64
+      num_layers: 2
+      dropout: 0.2
+      bidirectional: false
+
+    # Version 2: Add categorical embeddings
+    v2:
+      hidden_size: 64
+      num_layers: 2
+      dropout: 0.2
+      bidirectional: false
+      embedding_dims:
+        region: 4
+        sku_category: 8
+        request_urgency: 2
+        shipping_method: 2
+
+    # Version 3: Full model with all features
+    v3:
+      hidden_size: 64
+      num_layers: 2
+      dropout: 0.3
+      bidirectional: false
+      embedding_dims:
+        region: 4
+        sku_category: 8
+        request_urgency: 2
+        shipping_method: 2
+      use_exogenous: true
+
+  kmeans:
+    # Will be determined by elbow method, but set initial range
+    k_range: [3, 10]
+    init: "k-means++"
+    n_init: 10
+    max_iter: 300
+
+  prophet:
+    # Version 1: Basic seasonality model
+    v1:
+      seasonality_mode: 'multiplicative'
+      changepoint_prior_scale: 0.05
+      n_changepoints: 25
+      yearly_seasonality: true
+      weekly_seasonality: true
+      daily_seasonality: false
+      seasonality_prior_scale: 10.0
+      uncertainty_samples: 1000
+      interval_width: 0.80
+
+    # Version 2: With exogenous regressors
+    v2:
+      seasonality_mode: 'multiplicative'
+      changepoint_prior_scale: 0.05
+      n_changepoints: 25
+      yearly_seasonality: true
+      weekly_seasonality: true
+      daily_seasonality: false
+      seasonality_prior_scale: 10.0
+      uncertainty_samples: 1000
+      interval_width: 0.80
+      regressors:
+        - is_month_end
+        - failure_rate_pct
+        - avg_urgency
+
+    # Cross-validation settings
+    cross_validation:
+      horizon: '7 days'
+      period: '30 days'
+      initial: '365 days'
+
+# ============ TRAINING SETTINGS ============
+
+training:
+  rma:
+    batch_size: 64
+    learning_rate: 0.001
+    max_epochs: 50
+    early_stopping_patience: 10
+    lr_scheduler:
+      type: "reduce_on_plateau"
+      factor: 0.5
+      patience: 5
+
+    # Loss function
+    loss_function: "mse"  # mse, mae, huber
+
+    # Gradient clipping
+    max_grad_norm: 1.0
+
+  clustering:
+    # No training parameters needed - unsupervised
+
+# ============ EVALUATION SETTINGS ============
+
+evaluation:
+  regression_metrics:
+    - mae
+    - mse
+    - rmse
+    - mape
+    - r2
+
+  clustering_metrics:
+    - silhouette_score
+    - calinski_harabasz
+    - davies_bouldin
+    - inertia
+
+# ============ VISUALIZATION SETTINGS ============
+
+visualization:
+  style: "seaborn-v0_8-whitegrid"
+  figure_dpi: 150
+  figure_format: "png"
+  color_palette: "husl"
+
+  # Figure sizes (width, height) in inches
+  sizes:
+    single: [10, 6]
+    double: [14, 6]
+    triple: [16, 5]
+    large: [12, 10]
+
+# ============ OUTPUT PATHS ============
+
+paths:
+  data:
+    raw: "data/raw"
+    processed: "data/processed"
+  outputs:
+    figures: "outputs/figures"
+    models: "outputs/models"
+    logs: "outputs/logs"
+
+# ============ MLOPS SETTINGS ============
+
+mlops:
+  model_registry:
+    save_format: "pt"  # For PyTorch models
+    include_metadata: true
+    include_config: true
+
+  serving:
+    host: "0.0.0.0"
+    port: 8000
+    api_version: "v1"
