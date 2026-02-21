@@ -1,4 +1,4 @@
-# Time Series ML Demonstration
+# Time Series ML Simulation
 
 Two end-to-end time-series machine learning modeling scenarios built on synthetic data:
 
