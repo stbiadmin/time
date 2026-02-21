@@ -7,6 +7,12 @@ Two end-to-end time-series machine learning modeling scenarios built on syntheti
 
 Both pipelines run from data generation through model training, evaluation, and a FastAPI serving layer.
 
+## Blog Post
+
+For a detailed walkthrough of the design decisions, code architecture, and results from this project, read the companion blog post:
+
+**[Someone Else Owns my Best Code, So I Wrote It All Again](https://blog.justintime.ai/rebuilding-ml-projects-time-series/)**: covers the full lifecycle from synthetic data generation through GRU and Prophet model training to the FastAPI serving layer, with code snippets and references throughout.
+
 ## Quick Start
 
 ```bash
