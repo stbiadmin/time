@@ -1,0 +1,17 @@
+description: "Higher volatility for RMA, wider std for network clusters"
+data_generation:
+  rma:
+    regional_profiles:
+      NA: {base_volume: 100, growth_rate: 0.02, volatility: 0.30}
+      EMEA: {base_volume: 80, growth_rate: 0.03, volatility: 0.35}
+      APAC: {base_volume: 120, growth_rate: 0.08, volatility: 0.40}
+      LATAM: {base_volume: 40, growth_rate: 0.05, volatility: 0.45}
+      ANZ: {base_volume: 25, growth_rate: 0.01, volatility: 0.25}
+  network_events:
+    cluster_params:
+      normal_web: {duration_std: 3.0, bytes_std: 4.0}
+      normal_db: {duration_std: 2.0, bytes_std: 5.0}
+      suspicious_scan: {duration_std: 1.0, bytes_std: 2.0}
+      auth_failure: {duration_std: 2.0, bytes_std: 2.0}
+      data_exfil: {duration_std: 4.0, bytes_std: 6.0}
+      maintenance: {duration_std: 5.0, bytes_std: 6.0}

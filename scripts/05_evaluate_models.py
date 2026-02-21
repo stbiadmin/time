@@ -16,6 +16,7 @@ Usage:
 Expected Runtime: ~20 seconds
 """
 
+import argparse
 import sys
 import os
 from pathlib import Path
@@ -29,7 +30,7 @@ project_root = Path(__file__).parent.parent.resolve()
 sys.path.insert(0, str(project_root))
 os.chdir(project_root)
 
-from src.utils.helpers import set_seed, load_config, ensure_dir, get_device
+from src.utils.helpers import set_seed, load_config, ensure_dir, get_device, add_dataset_args, resolve_data_paths
 from src.utils.logging_config import setup_logging, log_section, log_metrics
 from src.preprocessing.rma_preprocessor import RMAPreprocessor, RMADataConfig, create_data_loaders
 from src.models.gru_forecaster import create_model
@@ -41,6 +42,10 @@ from mlops.model_registry import ModelRegistry
 
 def main():
     """Run comprehensive model evaluation."""
+    parser = argparse.ArgumentParser(description="Comprehensive model evaluation")
+    add_dataset_args(parser)
+    args = parser.parse_args()
+    rma_path, network_path = resolve_data_paths(args)
 
     # ============ SETUP ============
     logger = setup_logging(log_level="INFO")
@@ -69,8 +74,8 @@ def main():
 
     if artifacts:
         # Load and preprocess test data
-        logger.info("\nPreparing test data...")
-        rma_df = pd.read_csv("data/raw/rma_shipping_data.csv", parse_dates=["date"])
+        logger.info(f"\nPreparing test data from {rma_path}...")
+        rma_df = pd.read_csv(rma_path, parse_dates=["date"])
 
         preprocess_config = RMADataConfig(
             sequence_length=config["preprocessing"]["rma"]["sequence_length"],
@@ -166,7 +171,7 @@ def main():
 
     if cluster_artifacts:
         # Load network events
-        network_df = pd.read_csv("data/raw/network_events.csv", parse_dates=["timestamp"])
+        network_df = pd.read_csv(network_path, parse_dates=["timestamp"])
 
         # Reconstruct features (simplified - would need full pipeline in production)
         from src.preprocessing.network_preprocessor import NetworkPreprocessor, NetworkDataConfig

@@ -81,7 +81,8 @@ LOG_TEMPLATES = {
 def generate_network_events(
     config_path: str = "config/settings.yaml",
     output_path: Optional[str] = None,
-    seed: int = 42
+    seed: int = 42,
+    config: Optional[Dict] = None,
 ) -> pd.DataFrame:
     """
     Generate synthetic network event data with embedded cluster patterns.
@@ -90,6 +91,7 @@ def generate_network_events(
         config_path: Path to configuration YAML file
         output_path: Optional path to save generated CSV
         seed: Random seed for reproducibility
+        config: Pre-loaded config dict (skips loading from config_path if provided)
 
     Returns:
         DataFrame with synthetic network events
@@ -97,7 +99,8 @@ def generate_network_events(
     set_seed(seed)
     logger = get_logger()
 
-    config = load_config(config_path)
+    if config is None:
+        config = load_config(config_path)
     net_config = config["data_generation"]["network_events"]
 
     n_events = net_config["n_events"]
@@ -122,6 +125,8 @@ def generate_network_events(
 
     logger.info(f"Cluster distribution: {cluster_counts}")
 
+    cluster_params_overrides = net_config.get("cluster_params", {})
+
     all_records = []
 
     for cluster_name, count in cluster_counts.items():
@@ -132,6 +137,7 @@ def generate_network_events(
             start_time=start_time,
             end_time=end_time,
             common_ports=common_ports,
+            param_overrides=cluster_params_overrides.get(cluster_name, {}),
         )
         all_records.extend(records)
 
@@ -158,6 +164,7 @@ def _generate_cluster_events(
     start_time: datetime,
     end_time: datetime,
     common_ports: Dict[str, List[int]],
+    param_overrides: Optional[Dict] = None,
 ) -> List[Dict]:
     """
     Generate events for a specific cluster type.
@@ -168,6 +175,7 @@ def _generate_cluster_events(
         start_time: Start of time window
         end_time: End of time window
         common_ports: Dictionary of port lists by type
+        param_overrides: Optional dict of parameter overrides for this cluster
 
     Returns:
         List of event dictionaries
@@ -175,7 +183,7 @@ def _generate_cluster_events(
     records = []
     time_range = (end_time - start_time).total_seconds()
 
-    cluster_params = _get_cluster_params(cluster_name)
+    cluster_params = _get_cluster_params(cluster_name, param_overrides)
 
     for _ in range(n_events):
         # Timestamp generation (maintenance is off-hours)
@@ -233,12 +241,13 @@ def _generate_cluster_events(
     return records
 
 
-def _get_cluster_params(cluster_name: str) -> Dict:
+def _get_cluster_params(cluster_name: str, overrides: Optional[Dict] = None) -> Dict:
     """
     Get characteristic parameters for each cluster type.
 
     Args:
         cluster_name: Cluster type name
+        overrides: Optional dict of parameter overrides
 
     Returns:
         Dictionary of distribution parameters
@@ -317,7 +326,10 @@ def _get_cluster_params(cluster_name: str) -> Dict:
             "severity_probs": [1.0],
         },
     }
-    return params[cluster_name]
+    result = params[cluster_name]
+    if overrides:
+        result.update(overrides)
+    return result
 
 
 def _generate_ip(ip_type: str) -> str:

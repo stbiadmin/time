@@ -26,7 +26,8 @@ from ..utils.logging_config import get_logger
 def generate_rma_data(
     config_path: str = "config/settings.yaml",
     output_path: Optional[str] = None,
-    seed: int = 42
+    seed: int = 42,
+    config: Optional[Dict] = None,
 ) -> pd.DataFrame:
     """
     Generate synthetic RMA shipping data with embedded temporal patterns.
@@ -35,6 +36,7 @@ def generate_rma_data(
         config_path: Path to configuration YAML file
         output_path: Optional path to save generated CSV
         seed: Random seed for reproducibility
+        config: Pre-loaded config dict (skips loading from config_path if provided)
 
     Returns:
         DataFrame with synthetic RMA shipping data
@@ -43,7 +45,8 @@ def generate_rma_data(
     logger = get_logger()
 
     # Load configuration
-    config = load_config(config_path)
+    if config is None:
+        config = load_config(config_path)
     rma_config = config["data_generation"]["rma"]
 
     n_days = rma_config["n_days"]
@@ -65,14 +68,15 @@ def generate_rma_data(
 
     logger.info(f"Date range: {start_date.date()} to {end_date.date()}")
 
-    # Regional characteristics
-    regional_profiles = {
+    # Regional characteristics (from config, with hardcoded fallback)
+    default_profiles = {
         "NA": {"base_volume": 100, "growth_rate": 0.02, "volatility": 0.15},
         "EMEA": {"base_volume": 80, "growth_rate": 0.03, "volatility": 0.18},
         "APAC": {"base_volume": 120, "growth_rate": 0.08, "volatility": 0.20},
         "LATAM": {"base_volume": 40, "growth_rate": 0.05, "volatility": 0.25},
         "ANZ": {"base_volume": 25, "growth_rate": 0.01, "volatility": 0.12},
     }
+    regional_profiles = rma_config.get("regional_profiles", default_profiles)
 
     # Generate data records
     records = []

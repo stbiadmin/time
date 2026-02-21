@@ -17,6 +17,7 @@ Usage:
 Expected Runtime: ~20-30 seconds
 """
 
+import argparse
 import sys
 import os
 from pathlib import Path
@@ -28,13 +29,17 @@ project_root = Path(__file__).parent.parent.resolve()
 sys.path.insert(0, str(project_root))
 os.chdir(project_root)
 
-from src.utils.helpers import set_seed, load_config, ensure_dir
+from src.utils.helpers import set_seed, load_config, ensure_dir, add_dataset_args, resolve_data_paths
 from src.utils.logging_config import setup_logging, log_section
 from src.visualization.eda_plots import plot_eda_rma, plot_eda_network
 
 
 def main():
     """Run exploratory data analysis on both datasets."""
+    parser = argparse.ArgumentParser(description="Exploratory Data Analysis")
+    add_dataset_args(parser)
+    args = parser.parse_args()
+    rma_path, network_path = resolve_data_paths(args)
 
     # ============ SETUP ============
     logger = setup_logging(log_level="INFO")
@@ -49,8 +54,8 @@ def main():
     # ============ LOAD DATA ============
     logger.info("Loading datasets...")
 
-    rma_df = pd.read_csv("data/raw/rma_shipping_data.csv", parse_dates=["date"])
-    network_df = pd.read_csv("data/raw/network_events.csv", parse_dates=["timestamp"])
+    rma_df = pd.read_csv(rma_path, parse_dates=["date"])
+    network_df = pd.read_csv(network_path, parse_dates=["timestamp"])
 
     logger.info(f"  RMA data: {len(rma_df):,} records")
     logger.info(f"  Network events: {len(network_df):,} records")

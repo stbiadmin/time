@@ -1,0 +1,3 @@
+# Baseline preset - matches settings.yaml defaults exactly.
+# Use as a reference for creating new presets.
+description: "Baseline defaults (no overrides)"

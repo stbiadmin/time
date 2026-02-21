@@ -1,0 +1,10 @@
+description: "Elevated suspicious/exfil/auth proportions (~50% anomalous)"
+data_generation:
+  network_events:
+    cluster_types:
+      normal_web: 0.20
+      normal_db: 0.15
+      suspicious_scan: 0.20
+      auth_failure: 0.18
+      data_exfil: 0.12
+      maintenance: 0.15

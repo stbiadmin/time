@@ -11,6 +11,7 @@ Usage:
 Expected Runtime: ~30 seconds
 """
 
+import argparse
 import sys
 import os
 from pathlib import Path
@@ -24,7 +25,7 @@ project_root = Path(__file__).parent.parent.resolve()
 sys.path.insert(0, str(project_root))
 os.chdir(project_root)
 
-from src.utils.helpers import set_seed, load_config, ensure_dir
+from src.utils.helpers import set_seed, load_config, ensure_dir, add_dataset_args, resolve_data_paths
 from src.utils.logging_config import setup_logging, log_section, log_metrics
 from src.preprocessing.network_preprocessor import NetworkPreprocessor, NetworkDataConfig
 from src.models.kmeans_clusterer import KMeansClusterer, KMeansConfig
@@ -37,6 +38,10 @@ from mlops.model_registry import ModelRegistry
 
 def main():
     """Train clustering pipeline and evaluate results."""
+    parser = argparse.ArgumentParser(description="Train network event clustering model")
+    add_dataset_args(parser)
+    args = parser.parse_args()
+    _, network_path = resolve_data_paths(args)
 
     # Setup
     logger = setup_logging(log_level="INFO")
@@ -51,8 +56,8 @@ def main():
     # Load data
     log_section(logger, "LOADING DATA")
 
-    logger.info("Loading network events data...")
-    network_df = pd.read_csv("data/raw/network_events.csv", parse_dates=["timestamp"])
+    logger.info(f"Loading network events data from {network_path}...")
+    network_df = pd.read_csv(network_path, parse_dates=["timestamp"])
     logger.info(f"  Total events: {len(network_df):,}")
     logger.info(f"  Features: {list(network_df.columns)}")
 

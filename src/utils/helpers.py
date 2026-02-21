@@ -13,10 +13,12 @@ Business Context:
     consistent behavior across different runs and environments.
 """
 
+import argparse
+import copy
 import os
 import random
 from pathlib import Path
-from typing import Union, Dict, Any
+from typing import Any, Dict, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -154,6 +156,70 @@ def save_config(config: Dict[str, Any], path: Union[str, Path]) -> None:
 
     with open(path, "w") as f:
         yaml.dump(config, f, default_flow_style=False, sort_keys=False)
+
+
+def deep_merge(base: dict, overlay: dict) -> dict:
+    """Recursively merge overlay into base, overlay wins on conflicts."""
+    result = copy.deepcopy(base)
+    for key, value in overlay.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = deep_merge(result[key], value)
+        else:
+            result[key] = copy.deepcopy(value)
+    return result
+
+
+def load_config_with_preset(
+    config_path: str = "config/settings.yaml",
+    preset_name: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Load base config, optionally deep-merge a preset from config/presets/<name>.yaml."""
+    config = load_config(config_path)
+    if preset_name:
+        preset_path = Path("config/presets") / f"{preset_name}.yaml"
+        if not preset_path.exists():
+            raise FileNotFoundError(f"Preset not found: {preset_path}")
+        with open(preset_path, "r") as f:
+            preset = yaml.safe_load(f) or {}
+        # Only merge data_generation keys from presets
+        preset_data = {k: v for k, v in preset.items() if k != "description"}
+        config = deep_merge(config, preset_data)
+    return config
+
+
+def add_dataset_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
+    """Add --dataset-name, --rma-data, --network-data args to any script's parser."""
+    parser.add_argument(
+        "--dataset-name", "-d",
+        help="Dataset name: loads data/raw/rma_<name>.csv and data/raw/network_<name>.csv",
+    )
+    parser.add_argument(
+        "--rma-data",
+        help="Explicit path to RMA CSV (overrides --dataset-name)",
+    )
+    parser.add_argument(
+        "--network-data",
+        help="Explicit path to network events CSV (overrides --dataset-name)",
+    )
+    return parser
+
+
+def resolve_data_paths(args, data_dir: str = "data/raw") -> Tuple[str, str]:
+    """Resolve (rma_path, network_path) from parsed CLI args."""
+    data_dir = Path(data_dir)
+    if getattr(args, "dataset_name", None):
+        rma_path = str(data_dir / f"rma_{args.dataset_name}.csv")
+        network_path = str(data_dir / f"network_{args.dataset_name}.csv")
+    else:
+        rma_path = str(data_dir / "rma_shipping_data.csv")
+        network_path = str(data_dir / "network_events.csv")
+
+    if getattr(args, "rma_data", None):
+        rma_path = args.rma_data
+    if getattr(args, "network_data", None):
+        network_path = args.network_data
+
+    return rma_path, network_path
 
 
 def format_time(seconds: float) -> str:

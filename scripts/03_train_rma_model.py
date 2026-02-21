@@ -19,6 +19,7 @@ Usage:
 Expected Runtime: ~3-4 minutes (all three versions)
 """
 
+import argparse
 import sys
 import os
 from pathlib import Path
@@ -32,7 +33,7 @@ project_root = Path(__file__).parent.parent.resolve()
 sys.path.insert(0, str(project_root))
 os.chdir(project_root)
 
-from src.utils.helpers import set_seed, load_config, ensure_dir, get_device
+from src.utils.helpers import set_seed, load_config, ensure_dir, get_device, add_dataset_args, resolve_data_paths
 from src.utils.logging_config import setup_logging, log_section, log_metrics
 from src.preprocessing.rma_preprocessor import RMAPreprocessor, RMADataConfig, create_data_loaders
 from src.models.gru_forecaster import create_model, get_model_summary
@@ -48,6 +49,10 @@ from mlops.model_registry import ModelRegistry
 
 def main():
     """Train all GRU model versions and compare results."""
+    parser = argparse.ArgumentParser(description="Train GRU RMA forecasting models")
+    add_dataset_args(parser)
+    args = parser.parse_args()
+    rma_path, _ = resolve_data_paths(args)
 
     # ============ SETUP ============
     logger = setup_logging(log_level="INFO")
@@ -64,8 +69,8 @@ def main():
     # ============ LOAD AND PREPROCESS DATA ============
     log_section(logger, "DATA PREPROCESSING")
 
-    logger.info("Loading RMA data...")
-    rma_df = pd.read_csv("data/raw/rma_shipping_data.csv", parse_dates=["date"])
+    logger.info(f"Loading RMA data from {rma_path}...")
+    rma_df = pd.read_csv(rma_path, parse_dates=["date"])
     logger.info(f"  Total records: {len(rma_df):,}")
 
     # NOTE: We aggregate to daily regional totals for time series forecasting

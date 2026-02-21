@@ -1,0 +1,7 @@
+description: "Small dataset for fast iteration"
+data_generation:
+  rma:
+    n_days: 90
+  network_events:
+    n_events: 5000
+    time_window_days: 14
