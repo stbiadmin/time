@@ -1,0 +1,21 @@
+[run]
+source = src
+branch = True
+omit =
+    */tests/*
+    */__pycache__/*
+    */migrations/*
+
+[report]
+show_missing = True
+skip_empty = True
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if __name__ == .__main__.
+    raise NotImplementedError
+    pass
+    except ImportError
+
+[html]
+directory = htmlcov

@@ -32,6 +32,33 @@ python scripts/06_export_for_serving.py
 uvicorn mlops.serving.app:app --host 0.0.0.0 --port 8000
 ```
 
+### Dataset Variants
+
+The data generation script supports presets for creating different dataset configurations:
+
+```bash
+# List available presets
+python scripts/01_generate_data.py --list-presets
+
+# Generate a named variant from a preset
+python scripts/01_generate_data.py -n small -p small --save-config
+
+# Override specific parameters via CLI
+python scripts/01_generate_data.py -n custom --rma-rows 10000 --event-rows 5000
+
+# Train on a named variant
+python scripts/03_train_rma_model.py -d small
+python scripts/05_evaluate_models.py -d small
+```
+
+| Preset | RMA Rows | Event Rows | Description |
+|--------|----------|------------|-------------|
+| `baseline` | 50,000 | 30,000 | Default configuration |
+| `small` | 5,000 | 3,000 | Quick iteration and testing |
+| `high_anomaly` | 50,000 | 30,000 | Elevated anomaly rates |
+| `imbalanced` | 50,000 | 30,000 | Skewed class distributions |
+| `noisy` | 50,000 | 30,000 | Added noise to features |
+
 ## Synthetic Data
 
 Both datasets are generated from scratch by `01_generate_data.py` with controlled random seeds for reproducibility. See [`data/README.md`](data/README.md) for full column schemas and statistics.
@@ -60,7 +87,12 @@ Both datasets are generated from scratch by `01_generate_data.py` with controlle
 
 ```
 time/
-├── config/settings.yaml              # Centralized configuration
+├── .github/
+│   ├── workflows/tests.yml            # CI pipeline
+│   └── ISSUE_TEMPLATE/                # Bug report & feature request templates
+├── config/
+│   ├── settings.yaml                  # Centralized configuration
+│   └── presets/                       # Data generation presets (baseline, small, etc.)
 ├── data/
 │   ├── raw/                           # Generated synthetic datasets
 │   ├── processed/                     # Preprocessed data
@@ -86,10 +118,17 @@ time/
 │   ├── 05_evaluate_models.py          # Model evaluation
 │   └── 06_export_for_serving.py       # MLOps preparation
 ├── tests/
-└── outputs/
-    ├── figures/                       # Generated visualizations
-    ├── models/                        # Saved model artifacts
-    └── logs/                          # Training logs
+├── outputs/
+│   ├── figures/                       # Generated visualizations
+│   ├── models/                        # Saved model artifacts
+│   └── logs/                          # Training logs
+├── LICENSE                            # MIT License
+├── CONTRIBUTING.md                    # Contribution guidelines
+├── CODE_OF_CONDUCT.md                 # Contributor Covenant
+├── CITATION.cff                       # Citation metadata
+├── pyproject.toml                     # Project metadata and tool config
+├── requirements.txt                   # Production dependencies
+└── requirements-dev.txt               # Development dependencies
 ```
 
 ---
@@ -292,6 +331,32 @@ outputs/models/network_clustering_v1/
 
 ---
 
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+```bash
+# Dev setup
+pip install -r requirements-dev.txt
+pre-commit install
+```
+
 ## License
 
-This project was developed and released for educational and demonstration purposes.
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
+## Citation
+
+If you use this project in your research, please cite it:
+
+```bibtex
+@software{norman2025timeseries,
+  author    = {Norman, Justin D},
+  title     = {Time Series ML Demonstration},
+  version   = {0.1.0},
+  url       = {https://github.com/stbiadmin/time},
+  license   = {MIT}
+}
+```
+
+See [CITATION.cff](CITATION.cff) for machine-readable citation metadata.

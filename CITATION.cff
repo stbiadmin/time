@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "Time Series ML Demonstration"
+version: 0.1.0
+date-released: "2025-01-01"
+authors:
+  - family-names: Norman
+    given-names: Justin D
+keywords:
+  - time-series-forecasting
+  - gru
+  - prophet
+  - clustering
+  - anomaly-detection
+  - machine-learning
+  - mlops
+  - fastapi
+  - synthetic-data
+license: MIT
+repository-code: "https://github.com/stbiadmin/time"
